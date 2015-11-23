@@ -137,7 +137,7 @@ bundle agent _log_rudder_v2(expected_reports_source, message, class_prefix, args
       # log call stack (_log + log_rudder + _log_rudder_v2 or _logger + _log + log_rudder + _log_rudder_v2 or logger_rudder + log_rudder + _log_rudder_v2)
       # 1/ We search for known promisers from _log, _logger, logger_rudder, log_rudder, log_rudder_v2 and remove them
       "promisers_list"            slist => { @{this.callers_promisers} };
-      "promiser_list_nologgerint" slist => filter("(wrapper for logger_rudder|wrapper for log_rudder|legacy _logger wrapper|legacy logger_rudder wrapper|call _log_rudder_v2)", promisers_list, "true", "true", 9999);
+      "promiser_list_nologgerint" slist => filter("(wrapper for logger_rudder|wrapper for log_rudder|legacy _logger wrapper|legacy logger_rudder wrapper|call _log_rudder_v2)", promisers_list, "true", "true", 999);
 
       # 2/ We remove the last promiser, which is the original call to any of the above logger methods
       "promiser_count"  int => length("this.promiser_list_nologgerint");
