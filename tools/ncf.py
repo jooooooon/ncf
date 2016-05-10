@@ -473,8 +473,8 @@ def generate_technique_content(technique_metadata, methods):
         parameter = methods[method_name]["parameter"][index]
         arg_constraint = parameter.get("constraints", {})
         check = ncf_constraints.check_parameter(arg, arg_constraint)
-        if not check:
-          raise NcfError("Invalid value for parameter '"+ parameter["name"] +"' of method '"+ method_name +"' in technique '"+ technique['bundle_name'] +"', invalid value is '"+ arg+"'")
+        if not check.result:
+          raise NcfError("Invalid value for parameter '"+ parameter["name"] +"' of method '"+ method_name +"' in technique '"+ technique['bundle_name'] +"', invalid value is '"+ arg+"', doesn't match constraints " + " ".join(check.errors))
       args = ['"%s"'%regex.sub(r'\\"', arg) for arg in method_call['args'] ]
       arg_value = ', '.join(args)
     else:

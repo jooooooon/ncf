@@ -14,76 +14,76 @@ def from_list( parameter, accepted_result):
   return parameter in accepted_result
 
 def max_length( parameter, max_size):
-  return parameter.length <= max_size
+  return len(parameter) <= max_size
 
 def min_length( parameter, min_size):
-  return parameter.length >= min_size
+  return len(parameter) >= min_size
 
-def match_regexp(parameter, regexp):
-  match = re.match(regexp, parameter, re.S)
+def match_regex(parameter, regex):
+  match = re.search(regex, parameter)
   return match is not None
 
-def not_match_regexp(parameter, regexp):
-  return not match_regexp(parameter, regexp)
-
-string_constraints = {
-    "default" : "^\S(.*\S)?$"
-  , "allow_whitespace_string" : "^.+$"
-  , "allow_empty_string" : "^(\S(.*\S)?)?$"
-  , "all" : ".*"
-}
+def not_match_regex(parameter, regex):
+  return not match_regex(parameter, regex)
 
 def check_parameter(parameter, constraint):
   """Checks that a parameter is ok with the constraint passed as parameter"""
 
-  # First check 'string' constraint
-  string_constraint = "default"
-  empty_constraint = constraint.get("allow_empty_string", False)
-  if constraint.get("allow_whitespace_string", False):
-    if empty_constraint:
-      string_constraint = "all"
-    else:
-      string_constraint = "allow_whitespace_string"
-  elif empty_constraint:
-    string_constraint = "allow_empty_string"
-  string_regex = string_constraints[string_constraint]
-  result = match_regexp(parameter, string_regex)
+  result = True
+  errors = [];
+
+  # First check 'string' constraints
+  if not constraint.get("allow_empty_string", False):
+    if match_regex(parameter, "^$"):
+      errors.append("allow_empty_string")
+      result = False
+
+  if not constraint.get("allow_whitespace_string", False):
+    if match_regex(parameter, r'^\s') or match_regex(parameter, r'\s+$'):
+      errors.append("allow_whitespace_string")
+      result = False
 
   # Check if in list of accepted values
-  if result:
-    if "list" in constraint:
-      result = from_list(parameter, constraint["list"])
+  if "list" in constraint:
+    if not from_list(parameter, constraint["list"]):
+      errors.append("list")
+      result = False
 
-  # Check regexps constraints
-  if result:
-    if "regexp" in constraint:
-      result = match_regexp(parameter, constraint["regexp"])
+  # Check regexs constraints
+  if "regex" in constraint:
+    if not match_regex(parameter, constraint["regex"]):
+      errors.append("regex")
+      result = False
 
-  if result:
-    if "not_regexp" in constraint:
-      result = not_match_regexp(parameter, constraint["not_regexp"])
+  if "not_regex" in constraint:
+    if not not_match_regex(parameter, constraint["not_regex"]):
+      errors.append("not_regex")
+      result = False
 
   # Check length constraints
-  if result:
-    if "min" in constraint:
-      result = min_length(parameter, constraint["min"])
+  if "min_length" in constraint:
+    if not min_length(parameter, constraint["min_length"]):
+      errors.append("min_length")
+      result = False
 
-  if result:
-    if "max" in constraint:
-      result = max_length(parameter, constraint["max"])
+  if "max_length" in constraint:
+    if not max_length(parameter, constraint["max_length"]):
+      errors.append("max_length")
+      result = False
   
-  return result
+  check = {'result': result, 'errors': errors}
+  return check
 
 
 constraint_type = {
     "allow_whitespace_string" : bool
   , "allow_empty_string" : bool
   , "list" : list
-  # use unicode for regexps, since they will be parsed as unicode ... 
-  , "regexp" : unicode
-  , "not_regexp": unicode
-  , "max" : int
-  , "min" : int
+  # use unicode for regexs, since they will be parsed as unicode ...
+  , "regex" : unicode
+  , "not_regex": unicode
+  , "max_length" : int
+  , "min_length" : int
 }
 
 def check_constraint_type(key, value):
